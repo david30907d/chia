@@ -29,9 +29,15 @@ def q21_cooccur_matrix(filename='raw_sentences.txt', window=2):
 	for word, correlationList in correlationDict.items():
 		for cor in correlationList:
 			cooccur_matrix[vocab[word]][vocab[cor]] = 1
+
+	# turn diagonal to zero
+	# cause we all know a word is correlated to itself
+	for i in range(0, vocID):
+		cooccur_matrix[i][i] = 0
 	return vocab, inv_vocab, cooccur_matrix
 
 vocab, inv_vocab, cooccur_matrix = q21_cooccur_matrix()
+print(vocab, inv_vocab, cooccur_matrix)
 
 def q22_word_vectors(cooccur_matrix, dim=10):
 	import numpy as np
@@ -48,4 +54,28 @@ def q22_word_vectors(cooccur_matrix, dim=10):
 	return word_vectors
 
 word_vectors = q22_word_vectors(cooccur_matrix)
-print(word_vectors)
+# print(word_vectors)
+
+def q23_similarity(word, wv=word_vectors, vocab=vocab, inv_vocab=inv_vocab):
+	'''
+	Arguments
+		word: 要找的單字
+		wv: word vector matrix with shape (N, 10)
+		vocab: vocabulary
+		inv_vocab: inverse vocabulary
+	Returns
+		ret: 長度為3的list，每個元素都是 tuple (word, similarity)
+	'''
+	from scipy.spatial.distance import cosine
+
+	table = {}
+	u = word_vectors[vocab[word]]
+
+	for vocID, v in enumerate(word_vectors):
+		if vocID != vocab[word]:
+			table[inv_vocab[vocID]] = (-cosine(u, v)+1)
+	return sorted(table.items(), key=lambda x:-x[1])[:3]
+
+word = 'No'
+for word, sim in q23_similarity(word):
+	print(word, sim)
